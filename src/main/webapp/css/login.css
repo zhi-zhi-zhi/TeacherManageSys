@@ -1,0 +1,60 @@
+* {padding: 0;margin: 0;}
+
+html {
+    background-color: #008ead;
+}
+
+p {
+    margin: 0;
+}
+
+h3.system-name {
+    padding-top: 20px;
+    padding-right: 20px;
+    background-color: #008ead;
+    color: white;
+}
+
+span.system-name {
+    cursor: pointer;
+}
+
+.login-container {
+    position: absolute;
+    top: 23%;
+    left: 33%;
+
+    overflow: hidden;
+    background-color: #fff;
+    width: 400px;
+    height: 300px;
+    text-align: center;
+
+    -o-transform: rotate(7deg);
+
+    padding: 0 40px;
+}
+
+h1 {
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+}
+
+.remind {
+    padding: 2px 0;
+    text-align: left;
+    color: red;
+}
+
+.two-check {
+    display: flex;
+    justify-content: space-around;
+}
+
+label {
+    color: rgb(184, 186, 188);
+}
+
+.register {
+    margin-top: 10px;
+}
