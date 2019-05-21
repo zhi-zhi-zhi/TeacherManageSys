@@ -11,7 +11,8 @@ import java.lang.annotation.Target;
  */
 @Target(value = {ElementType.FIELD})
 @Retention(value = RetentionPolicy.RUNTIME)
-public @interface Column {
-    // field的包装类型
+public @interface FieldType {
+    // field的包装类
+    // 被注解修饰的field默认认为其name同数据库表中的列名相同
     String value() default "";
 }

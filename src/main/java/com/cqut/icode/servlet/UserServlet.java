@@ -1,10 +1,10 @@
 package com.cqut.icode.servlet;
 
 //import com.cqut.icode.dao.UserDao;
+import com.cqut.icode.annotation.AutoWired;
 import com.cqut.icode.entities.User;
-import com.cqut.icode.factory.CreateId;
+import com.cqut.icode.util.RandomLong;
 import com.cqut.icode.services.UserService;
-import com.cqut.icode.services.impl.UserServiceImpl;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -21,31 +21,32 @@ import java.io.IOException;
 
 @WebServlet(value = "/login")
 public class UserServlet extends HttpServlet {
-    private static UserService userService = new UserServiceImpl();
+    @AutoWired
+    private static UserService userService;
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         System.out.println("\n用户登录");
-        String userId = req.getParameter("username");
+        String username = req.getParameter("username");
         String password = req.getParameter("password");
 
-        boolean result = userService.login(new User(Long.parseLong(userId), password));
+        boolean result = userService.login(new User(Long.parseLong(username), password));
 
         if (result) {
             resp.getWriter().write("success");
             HttpSession session = req.getSession();
-            session.setAttribute("userId", userId);
+            session.setAttribute("username", username);
             System.out.println("" + session.getId());
-            System.out.println(session.getAttribute("userId"));
+            System.out.println(session.getAttribute("username"));
         } else {
             resp.getWriter().write("username or password wrong");
         }
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         System.out.println("\n用户注册");
-        Long userId = CreateId.createUsername();
+        Long userId = RandomLong.create();
         String password = req.getParameter("password");
         System.out.println("password: " + password);
         User user = new User(userId, password);

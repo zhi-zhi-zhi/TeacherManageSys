@@ -1,30 +1,32 @@
 package com.cqut.icode.entities;
 
 import com.cqut.icode.annotation.AutoIncrementId;
+import com.cqut.icode.annotation.Table;
 import com.cqut.icode.entities.base.BaseEntity;
-import com.cqut.icode.annotation.Column;
+import com.cqut.icode.annotation.FieldType;
 
 /**
  * @author 谭强
  * @date 2019/5/11
  */
+@Table(value = "teacher")
 public class Teacher extends BaseEntity{
     @AutoIncrementId
-    @Column(value = "Long")
+    @FieldType(value = "Long")
     private Long id;
-    @Column(value = "Long")
+    @FieldType(value = "Long")
     private Long tno;
-    @Column(value = "String")
+    @FieldType(value = "String")
     private String name;
-    @Column(value = "String")
+    @FieldType(value = "String")
     private String gender;
-    @Column(value = "Integer")
+    @FieldType(value = "Integer")
     private Integer age;
-    @Column(value = "String")
+    @FieldType(value = "String")
     private String academy;
-    @Column(value = "String")
+    @FieldType(value = "String")
     private String dept;
-    @Column(value = "Float")
+    @FieldType(value = "Float")
     private Float salary;
 
     public Teacher() {
@@ -41,6 +43,17 @@ public class Teacher extends BaseEntity{
 
     public Teacher(Long id, String name, String gender, Integer age, String academy, String dept, Float salary) {
         this.id = id;
+        this.name = name;
+        this.gender = gender;
+        this.age = age;
+        this.academy = academy;
+        this.dept = dept;
+        this.salary = salary;
+    }
+
+    public Teacher(Long id, Long tno, String name, String gender, Integer age, String academy, String dept, Float salary) {
+        this.id = id;
+        this.tno = tno;
         this.name = name;
         this.gender = gender;
         this.age = age;
@@ -114,14 +127,10 @@ public class Teacher extends BaseEntity{
     }
 
     @Override
-    public String getTableName() {
-        return "teacher";
-    }
-
-    @Override
     public String toString() {
         return "Teacher{" +
                 "id=" + id +
+                ", tno=" + tno +
                 ", name='" + name + '\'' +
                 ", gender='" + gender + '\'' +
                 ", age=" + age +

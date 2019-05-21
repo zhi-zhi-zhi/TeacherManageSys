@@ -1,27 +1,29 @@
 package com.cqut.icode.entities;
 
-import com.cqut.icode.annotation.Column;
+import com.cqut.icode.annotation.FieldType;
 import com.cqut.icode.annotation.AutoIncrementId;
+import com.cqut.icode.annotation.Table;
 import com.cqut.icode.entities.base.BaseEntity;
 
 /**
  * @author 谭强
  * @date 2019/5/12
  */
+@Table(value = "user")
 public class User extends BaseEntity {
     @AutoIncrementId
-    @Column(value = "id")
+    @FieldType(value = "Long")
     private Long id;
-    @Column(value = "username")
+    @FieldType(value = "Long")
     private Long username;
-    @Column(value = "password")
+    @FieldType(value = "String")
     private String password;
 
     public User() {
     }
 
-    public User(Long id, String password) {
-        this.id = id;
+    public User(Long username, String password) {
+        this.username = username;
         this.password = password;
     }
 
@@ -34,6 +36,14 @@ public class User extends BaseEntity {
         this.id = id;
     }
 
+    public Long getUsername() {
+        return username;
+    }
+
+    public void setUsername(Long username) {
+        this.username = username;
+    }
+
     public String getPassword() {
         return password;
     }
@@ -43,7 +53,11 @@ public class User extends BaseEntity {
     }
 
     @Override
-    public String getTableName() {
-        return "user";
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username=" + username +
+                ", password='" + password + '\'' +
+                '}';
     }
 }

@@ -8,11 +8,11 @@ function initTable() {
         method: "get",
         ajaxOptions: {
             success: function (res) {
-                console.log("ajax success")
+                console.log("ajax success");
                 console.log(res);
             },
             error: function (res) {
-                console.log("ajax error")
+                console.log("ajax error");
                 console.log(res)
             },
             complete: function (XMLHttpRequest, textStatus) {
@@ -46,7 +46,7 @@ function initTable() {
         // dataField: "res",
 
         columns: teacherColumns
-    })
+    });
     console.log("~~~~~~~~~~~~~~")
 }
 
@@ -77,9 +77,10 @@ function detailFormatter(index, row) {
 $("#table").on('check.bs.table uncheck.bs.table ' +
     'check-all.bs.table uncheck-all.bs.table',
     function () {
-        console.log("check.bs.table")
+        let $table = $("#table");
+        console.log("check.bs.table");
 
-        $("#remove").prop('disabled', !$("#table").bootstrapTable('getSelections').length);
+        $("#remove").prop('disabled', !$table.bootstrapTable('getSelections').length);
         $("#update").prop('disabled',
-            $("#table").bootstrapTable('getSelections').length !== 1);
+            $table.bootstrapTable('getSelections').length !== 1);
     });

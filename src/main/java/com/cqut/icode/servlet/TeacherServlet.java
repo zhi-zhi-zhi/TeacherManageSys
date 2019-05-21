@@ -1,7 +1,7 @@
 package com.cqut.icode.servlet;
 
 
-import com.cqut.icode.factory.CreateId;
+import com.cqut.icode.annotation.AutoWired;
 import com.cqut.icode.services.TeacherService;
 import com.cqut.icode.services.impl.TeacherServiceImpl;
 import com.cqut.icode.entities.Teacher;
@@ -26,19 +26,19 @@ import java.util.Map;
 
 @WebServlet(value = "/teacher")
 public class TeacherServlet extends HttpServlet {
-    private static TeacherService teacherService = new TeacherServiceImpl();
+    @AutoWired
+    private static TeacherService teacherService;
 
     /**
      * 请求所有表单信息
      * @param req  ·
      * @param resp ·
-     * @throws ServletException ·
      * @throws IOException ·
      */
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         System.out.println("\n获取数据");
-        List<Map<String, Object>> teachers = teacherService.listTeachers();
+        List<Teacher> teachers = teacherService.listTeachers();
         resp.setCharacterEncoding("UTF-8");
         resp.getWriter().append(JSONArray.fromObject(teachers).toString());
     }
@@ -47,32 +47,33 @@ public class TeacherServlet extends HttpServlet {
      * 因为原生 put 解决不了传送中文数据的问题，采用 post
      */
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Teacher teacher = getTeacher(req);
-        boolean result = false;
+        boolean result;
         if (req.getParameterMap().containsKey("id")) {
             System.out.println("\n更新数据");
             teacher.setId(Long.parseLong(req.getParameter("id")));
+            teacher.setTno(Long.parseLong((System.currentTimeMillis() + "").substring(2)));
             result = teacherService.updateTeacher(teacher);
         } else {
             System.out.println("\n插入数据");
-//            teacher.setId(CreateId.createUsername());
+            teacher.setTno(Long.parseLong((System.currentTimeMillis() + "").substring(2)));
             result = teacherService.saveTeacher(teacher);
         }
         resp.getWriter().write(result + "");
     }
 
     @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         System.out.println("\n删除数据");
         BufferedReader br = new BufferedReader(new InputStreamReader(req.getInputStream()));
 
-        String ids = "";
-        String line = "";
+        StringBuilder ids = new StringBuilder();
+        String line;
         while ((line = br.readLine()) != null) {
-            ids += line;
+            ids.append(line);
         }
-        String[] idss = ids.split("&");
+        String[] idss = ids.toString().split("&");
 
         List<Long> list = new ArrayList<>();
         for (String s : idss) {

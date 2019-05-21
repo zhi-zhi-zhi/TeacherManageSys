@@ -16,7 +16,7 @@ import java.util.List;
  */
 
 @WebFilter(value = "/*")
-public class TeacherFilter implements Filter {
+public class LoginFilter implements Filter {
     /**
      * 需要过滤的静态资源
      */
@@ -31,7 +31,7 @@ public class TeacherFilter implements Filter {
     }
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(FilterConfig filterConfig) {
 
     }
 
@@ -56,10 +56,10 @@ public class TeacherFilter implements Filter {
             }
         }
 
-        if (session != null && (session.getAttribute("userId")) != null) {
+        if (session != null && (session.getAttribute("username")) != null) {
             System.out.println("用户已登陆");
             System.out.println("session id: " + session.getId());
-            System.out.println("user id: " + session.getAttribute("userId"));
+            System.out.println("username: " + session.getAttribute("username"));
 
             // chain.doFilter将请求转发给过滤器链下一个filter
             // 如果没有filter那就是请求的资源，比如servlet

@@ -6,42 +6,40 @@ window.onload = function () {
 };
 // 根据哪个按钮触发，决定表单是提交更新还是新增
 $("#myModal").on("show.bs.modal", function (e) {
-    console.log("show.bs.modal")
+    console.log("show.bs.modal");
 
     // 动态模态框的header---->新增 | 更新
-    let button = $(e.relatedTarget);
-    let recipient = button.data("whatever");
+    let $button = $(e.relatedTarget);
+    let $recipient = $button.data("whatever");
 
-    let modal = $(this);
-    modal.find(".modal-title").text(recipient);
+    let $modal = $(this);
+    $modal.find(".modal-title").text($recipient);
 
     // 初始化模态框的form表单
     initModal();
     //移除上次的校验配置，重新添加校验
-    let modalForm = $("#updateAndAddForm");
-    modalForm.data("bootstrapValidator").destroy();
-    modalForm.data("bootstrapValidator", null);
+    let $modalForm = $("#updateAndAddForm");
+    $modalForm.data("bootstrapValidator").destroy();
+    $modalForm.data("bootstrapValidator", null);
     formValidator(e.relatedTarget.id);
 
     if (e.relatedTarget.id === "update") {
         // 将勾选栏的值写到模态框里
-        let getSelectRow = $("#table").bootstrapTable("getSelections", function (row) {
+        let $getSelectRow = $("#table").bootstrapTable("getSelections", function (row) {
             return row;
         })[0];
-        $("#name").val(getSelectRow.name);
-        if (getSelectRow.gender === "男") {
+        $("#name").val($getSelectRow.name);
+        if ($getSelectRow.gender === "男") {
             $("#male").prop("checked", "true")
         } else {
             $("#female").prop("checked", "true")
         }
-        $("#age").val(getSelectRow.age);
-        $("#academy").val(getSelectRow.academy)
+        $("#age").val($getSelectRow.age);
+        $("#academy").val($getSelectRow.academy);
         initDept();
 
-        console.log($("#dept"));
-        console.log(getSelectRow.dept)
-        $("#dept").val(getSelectRow.dept)
-        $("#salary").val(getSelectRow.salary);
+        $("#dept").val($getSelectRow.dept);
+        $("#salary").val($getSelectRow.salary);
     }
     // 增加
     else {
@@ -57,11 +55,11 @@ function refreshTable() {
 
 // 模态框输入值初始化
 function initModal() {
-    console.log("`````init modal`````")
+    console.log("`````init modal`````");
 
-    $("#name").val("")
+    $("#name").val("");
     $("input[name='gender']").prop("checked", false);
-    $("#salary").val("")
+    $("#salary").val("");
     $("#age").val("");
 
     initAcademy();
@@ -71,7 +69,7 @@ function initModal() {
 
 // 学院初始化
 function initAcademy() {
-    console.log("`````init academy`````")
+    console.log("`````init academy`````");
 
     let text = ["<option selected disabled>请选择学院</option>"];
     for (let academy in optionsMap) {
@@ -111,7 +109,7 @@ function getIdSelections() {
 
 // 删除事件
 $("#remove").click(function () {
-    console.log("remove click")
+    console.log("remove click");
 
     const ids = getIdSelections();
     console.log(ids);
@@ -123,9 +121,14 @@ $("#remove").click(function () {
             data: {ids: ids},
             contentType: "application/x-www-form-urlencoded; charset=utf-8",
             traditional: true,
-            success: function () {
+            success: function (result) {
                 console.log("Ok");
-                toastr.success("删除成功！");
+                if (result === "true") {
+                    toastr.success("删除成功！");
+                } else {
+                    toastr.error("删除失败！");
+                }
+
                 refreshTable()
             },
             error: function () {
@@ -203,7 +206,7 @@ function formValidator(operation) {
                         message: "请输入薪水"
                     },
                     regexp: {
-                        regexp: /^[0-9] +([.]{1}[0-9]+)?$/,
+                        regexp: /^[0-9]+([.]{1}[0-9]+)?$/,
                         message: "薪水只能为正整数或者小数"
                     }
                 }
@@ -219,10 +222,8 @@ function formValidator(operation) {
         // console.log(bv);
         console.log($form.serialize());
 
-        let method;
         let data;
         let operator;
-        method = "post"
         if (operation === "add") {
             data = $form.serialize();
             console.log(data);
@@ -244,7 +245,7 @@ function formValidator(operation) {
             data: data,
             success: function (result) {
                 if (result === "true") {
-                    console.log("ok")
+                    console.log("ok");
                     toastr.success(operator + "成功！");
                     if (operation === "add") {
                         initModal();
@@ -253,9 +254,14 @@ function formValidator(operation) {
                     refreshTable();
                 } else {
                     toastr.error(operator + "失败！");
+                    if (operator === "新增教师") {
+                        console.log("tno已存在！");
+                        toastr.error("tno已存在！");
+                    }
                 }
             },
             error: function (result) {
+                toastr.error(result);
                 toastr.error("出bug啦，赶紧联系我");
             }
         })

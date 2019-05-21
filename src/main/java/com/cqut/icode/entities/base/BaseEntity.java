@@ -13,9 +13,4 @@ public abstract class BaseEntity implements Serializable {
      * */
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 每个实体类都应该实现这个方法从而知道该类所对应的表名
-     * @return 返回表名
-     */
-    public  abstract  String getTableName();
 }

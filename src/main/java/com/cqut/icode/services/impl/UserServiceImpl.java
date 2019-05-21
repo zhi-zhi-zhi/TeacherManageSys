@@ -1,5 +1,7 @@
 package com.cqut.icode.services.impl;
 
+import com.cqut.icode.annotation.AutoWired;
+import com.cqut.icode.dao.EntityDao;
 import com.cqut.icode.dao.impl.EntityDaoImpl;
 import com.cqut.icode.entities.User;
 import com.cqut.icode.services.UserService;
@@ -9,13 +11,12 @@ import com.cqut.icode.services.UserService;
  * @date 2019/5/16
  */
 public class UserServiceImpl implements UserService {
-    private static EntityDaoImpl<User> dao = new EntityDaoImpl();
+    @AutoWired
+    private static EntityDao<User> dao;
 
     @Override
     public boolean login(User user) {
-        String condition = " where username = '" + user.getId()
-                + "' and password = '" + user.getPassword() + "'";
-        return dao.getEntity(condition, User.class) != null;
+        return dao.getEntity(user, User.class) != null;
     }
 
     @Override
