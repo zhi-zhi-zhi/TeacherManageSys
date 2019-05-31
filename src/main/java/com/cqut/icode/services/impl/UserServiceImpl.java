@@ -16,7 +16,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean login(User user) {
-        return dao.getEntity(user, User.class) != null;
+        return dao.getEntity(user) != null;
     }
 
     @Override

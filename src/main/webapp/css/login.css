@@ -13,6 +13,8 @@ h3.system-name {
     padding-right: 20px;
     background-color: #008ead;
     color: white;
+
+    text-align: right;
 }
 
 span.system-name {

@@ -1,5 +1,6 @@
 {
   "TeacherService": "com.cqut.icode.services.impl.TeacherServiceImpl",
   "UserService": "com.cqut.icode.services.impl.UserServiceImpl",
-  "EntityDao": "com.cqut.icode.dao.impl.EntityDaoImpl"
+  "EntityDao": "com.cqut.icode.dao.impl.EntityDaoImpl",
+  "TeacherDao": "com.cqut.icode.dao.otherDao.file.TeacherFileDao"
 }

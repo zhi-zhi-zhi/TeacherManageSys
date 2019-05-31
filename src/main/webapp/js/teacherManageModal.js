@@ -4,6 +4,7 @@ window.onload = function () {
 
     initTable();
 };
+
 // 根据哪个按钮触发，决定表单是提交更新还是新增
 $("#myModal").on("show.bs.modal", function (e) {
     console.log("show.bs.modal");
@@ -36,6 +37,7 @@ $("#myModal").on("show.bs.modal", function (e) {
         }
         $("#age").val($getSelectRow.age);
         $("#academy").val($getSelectRow.academy);
+
         initDept();
 
         $("#dept").val($getSelectRow.dept);
@@ -100,10 +102,18 @@ function initDept() {
     console.log(deptSelect);
 }
 
-// 获取已选中的id，用于删除操作
+// 获取已选中的id，用于删除及更新操作
 function getIdSelections() {
     return $.map($("#table").bootstrapTable("getSelections"), function (row) {
         return row.id
+    })
+}
+
+// 获取已选中的tno，用于更新
+// todo: tno作为主键应不允许用户修改，此处应有更好的解决办法
+function getTnoSelections() {
+    return $.map($("#table").bootstrapTable("getSelections"), function (row) {
+        return row.tno;
     })
 }
 
@@ -135,11 +145,10 @@ $("#remove").click(function () {
                 console.log("Ok");
                 toastr.success("删除成功！");
             }
-        })
+        });
+
+        $("#remove").prop("disabled", true)
     }
-
-
-    $("#remove").prop("disabled", true)
 });
 
 // modal框表单验证及提交操作
@@ -230,7 +239,7 @@ function formValidator(operation) {
             operator = "新增教师";
         } else if (operation === "update") {
             data = $form.serialize();
-            data = data.toString() + "&id=" + getIdSelections()[0];
+            data = data.toString() + "&id=" + getIdSelections()[0] + "&tno=" + getTnoSelections()[0];
             operator = "更新教师"
             // 原生 put 传输数据会把中文编程字符码再传数
             // method = "put"

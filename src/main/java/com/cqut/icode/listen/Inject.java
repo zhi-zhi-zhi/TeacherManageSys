@@ -7,17 +7,13 @@ import com.cqut.icode.servlet.TeacherServlet;
 import com.cqut.icode.servlet.UserServlet;
 import net.sf.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.lang.reflect.Field;
 
 /**
  * @author 谭强
  * @date 2019/5/21
  */
-class Process {
+class Inject {
     private JSONObject object;
 
     void setObject(JSONObject object) {
@@ -25,19 +21,20 @@ class Process {
     }
 
     void init() {
-        process(TeacherServlet.class);
-        process(UserServlet.class);
-        process(TeacherServiceImpl.class);
-        process(UserServiceImpl.class);
+        inject(TeacherServlet.class);
+        inject(UserServlet.class);
+        inject(TeacherServiceImpl.class);
+        inject(UserServiceImpl.class);
     }
 
-    private void process(Class tClass) {
+    private void inject(Class tClass) {
         try {
             Field[] fields = tClass.getDeclaredFields();
             for (Field field : fields) {
                 if (field.isAnnotationPresent(AutoWired.class)) {
                     System.out.println(object.get(field.getType().getSimpleName()));
                     Class clazz = Class.forName(object.get(field.getType().getSimpleName()).toString());
+
                     field.setAccessible(true);
                     field.set(null, clazz.newInstance());
                 }

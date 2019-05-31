@@ -53,11 +53,13 @@ public class TeacherServlet extends HttpServlet {
         if (req.getParameterMap().containsKey("id")) {
             System.out.println("\n更新数据");
             teacher.setId(Long.parseLong(req.getParameter("id")));
-            teacher.setTno(Long.parseLong((System.currentTimeMillis() + "").substring(2)));
+            teacher.setTno(Long.parseLong(req.getParameter("tno")));
+
             result = teacherService.updateTeacher(teacher);
         } else {
             System.out.println("\n插入数据");
             teacher.setTno(Long.parseLong((System.currentTimeMillis() + "").substring(2)));
+
             result = teacherService.saveTeacher(teacher);
         }
         resp.getWriter().write(result + "");

@@ -6,6 +6,7 @@ function initTable() {
         // method: "get",
         url: teacherUrl,
         method: "get",
+        dataType: "json",
         ajaxOptions: {
             success: function (res) {
                 console.log("ajax success");
@@ -21,6 +22,10 @@ function initTable() {
                     window.location.href = XMLHttpRequest.getResponseHeader("urlLocation");
                 }
             }
+        },
+        onLoadSuccess: function (data) {
+            console.log("```````json\n");
+            console.log(data)
         },
         cache: false,
         search: true,
@@ -57,8 +62,6 @@ function responseHandler(res) {
     console.log(res);
     res.forEach(function (row, i) {
         row.index = i + 1;
-        console.log("handle data");
-        console.log(res);
     });
 
     return res;

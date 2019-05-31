@@ -1,7 +1,7 @@
 package com.cqut.icode.entities;
 
 import com.cqut.icode.annotation.AutoIncrementId;
-import com.cqut.icode.annotation.Table;
+import com.cqut.icode.annotation.Entity;
 import com.cqut.icode.entities.base.BaseEntity;
 import com.cqut.icode.annotation.FieldType;
 
@@ -9,8 +9,8 @@ import com.cqut.icode.annotation.FieldType;
  * @author 谭强
  * @date 2019/5/11
  */
-@Table(value = "teacher")
-public class Teacher extends BaseEntity{
+@Entity(value = "teacher")
+public class Teacher extends BaseEntity implements Cloneable{
     @AutoIncrementId
     @FieldType(value = "Long")
     private Long id;
@@ -124,6 +124,16 @@ public class Teacher extends BaseEntity{
 
     public void setSalary(Float salary) {
         this.salary = salary;
+    }
+
+    @Override
+    public Object clone()  {
+        try {
+            return super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override

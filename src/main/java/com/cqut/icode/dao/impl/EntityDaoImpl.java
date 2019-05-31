@@ -1,7 +1,8 @@
 package com.cqut.icode.dao.impl;
 
 import com.cqut.icode.annotation.AutoIncrementId;
-import com.cqut.icode.annotation.Table;
+import com.cqut.icode.annotation.Entity;
+import com.cqut.icode.dao.EntityDao;
 import com.cqut.icode.dao.dbconnection.DBConnection;
 import com.cqut.icode.annotation.FieldType;
 import com.cqut.icode.entities.base.BaseEntity;
@@ -20,14 +21,14 @@ import java.util.List;
  * @author 谭强
  * @date 2019/5/11
  */
-public class EntityDaoImpl<T extends BaseEntity> implements com.cqut.icode.dao.EntityDao<T> {
+public class EntityDaoImpl<T extends BaseEntity> implements EntityDao<T> {
     private Connection connection = DBConnection.getDBConnection();
     private PreparedStatement preparedStatement = null;
     private ResultSet resultSet = null;
 
     @Override
-    public T getEntity(T entity, Class<T> tClass) {
-        List<T> list = listEntities(entity, tClass);
+    public T getEntity(T entity) {
+        List<T> list = listEntities(entity);
         if (list.size() >= 1) {
             return list.get(0);
         }
@@ -36,58 +37,238 @@ public class EntityDaoImpl<T extends BaseEntity> implements com.cqut.icode.dao.E
     }
 
     @Override
-    public List<T> listEntities(T entity, Class<T> tClass) {
+    public List<T> listEntities(T entity) {
+        List<T> result = null;
+        String sql;
+
+        try {
+            sql = getListEntitiesSql(entity);
+
+            preparedStatement = connection.prepareStatement(sql);
+            resultSet = preparedStatement.executeQuery();
+            result = getEntitiesList(entity);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        close();
+        return result;
+    }
+
+    @Override
+    public boolean saveEntity(T entity) {
+        String sql = getSaveEntitySql(entity);
+
+        return executeUpdate(sql);
+    }
+
+
+    @Override
+    public boolean removeEntities(List<Long> ids, Class<T> tClass) {
+        String sql = getRemoveEntitiesSql(ids, tClass);
+
+        return executeUpdate(sql);
+    }
+
+    @Override
+    public boolean updateEntity(T entity) {
+        String sql = getUpdateEntitySql(entity);
+
+        return executeUpdate(sql);
+    }
+
+    private boolean executeUpdate(String sql) {
+        boolean result = false;
+        System.out.println(sql);
+        try {
+            preparedStatement = connection.prepareStatement(sql);
+            result = preparedStatement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        close();
+        return result;
+    }
+
+    private void close() {
+        if (resultSet != null) {
+            try {
+                resultSet.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        if (preparedStatement != null) {
+            try {
+                preparedStatement.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    private String getListEntitiesSql(T entity) {
+        Class<?> tClass = entity.getClass();
+        String result = "";
+        try {
+            StringBuilder fieldsStr, condition;
+            // fieldName: 属性名   methodName: 方法名
+            String fieldName, methodName;
+            // 通过反射获取到的方法 例如： getAge()
+            Method method;
+            // tClass实体类的所有属性
+            Field[] fields = tClass.getDeclaredFields();
+            // field的包装类 如：age为Integer
+            FieldType annotation;
+            // 保存method执行后返回的数据
+            Object fieldValue;
+
+            fieldsStr = new StringBuilder();
+            condition = new StringBuilder(" where 1 = 1");
+            for (Field field : fields) {
+                fieldName = field.getName();
+                methodName = "get" + fieldName.toUpperCase().charAt(0) + field.getName().substring(1);
+                method = tClass.getMethod(methodName);
+                fieldValue = method.invoke(entity);
+
+                annotation = field.getAnnotation(FieldType.class);
+
+                fieldsStr.append(fieldName).append(", ");
+                if (fieldValue != null) {
+                    if ("String".equals(annotation.value())) {
+                        condition.append(" and ").append(fieldName).append(" = '").append(fieldValue).append("'");
+                    } else {
+                        condition.append(" and ").append(fieldName).append(" = ").append(fieldValue);
+                    }
+                }
+            }
+            fieldsStr.delete(fieldsStr.length() - 2, fieldsStr.length());
+
+            result = "select " + fieldsStr + " from "
+                    + tClass.getAnnotation(Entity.class).value() + condition;
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    private String getSaveEntitySql(T entity) {
+        String result = "";
+        Class<?> tClass;
+        Field[] fields;
+        StringBuilder fieldsStr, fieldsValueStr;
+        try {
+            tClass = entity.getClass();
+            fields = tClass.getDeclaredFields();
+            fieldsStr = new StringBuilder();
+            fieldsValueStr = new StringBuilder();
+
+            // example sql: insert into teacher(tno, name) values (?, ?)
+            for (Field field : fields) {
+                if (!field.isAnnotationPresent(AutoIncrementId.class)) {
+                    String fieldName = field.getName();
+                    String methodName = "get" + fieldName.toUpperCase().charAt(0)
+                            + fieldName.substring(1);
+                    Method method = tClass.getMethod(methodName);
+
+                    fieldsStr.append(fieldName).append(", ");
+                    fieldsValueStr.append("'").append(method.invoke(entity)).append("', ");
+                }
+            }
+            fieldsStr.delete(fieldsStr.length() - 2, fieldsStr.length());
+            fieldsValueStr.delete(fieldsValueStr.length() - 2, fieldsValueStr.length());
+
+            result = "insert ignore into " + tClass.getAnnotation(Entity.class).value()
+                    + "(" + fieldsStr + ") values (" + fieldsValueStr + ")";
+
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    private String getRemoveEntitiesSql(List<Long> ids, Class<T> tClass) {
+        StringBuilder condition = new StringBuilder("(");
+        for (Long id : ids) {
+            condition.append(id.toString()).append(", ");
+        }
+
+        // (1, 2, 3, 4, 5  ----> (1, 2, 3, 4, 5)
+        System.out.println(condition.delete(condition.length() - 2, condition.length()).append(")"));
+
+        Field[] fields = tClass.getDeclaredFields();
+        StringBuilder sql = new StringBuilder("delete from "
+                + tClass.getAnnotation(Entity.class).value()
+                + " where ");
+
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(AutoIncrementId.class)) {
+                sql.append(field.getName());
+                sql.append(" in ").append(condition).append(" ");
+                break;
+            }
+        }
+
+        return sql.toString();
+    }
+
+    private String getUpdateEntitySql(T entity) {
+        String result = "";
+        Class<?> tClass = entity.getClass();
+        Field[] fields = tClass.getDeclaredFields();
+
+        try {
+            StringBuilder sql = new StringBuilder();
+            StringBuilder condition = new StringBuilder(" where ");
+            for (Field field : fields) {
+                String fieldName = field.getName();
+                String methodName = "get" + fieldName.toUpperCase().charAt(0)
+                        + fieldName.substring(1);
+
+                Method method = tClass.getMethod(methodName);
+                if (field.isAnnotationPresent(AutoIncrementId.class)) {
+                    // example: id = 3;
+                    condition.append(field.getName()).append(" = ").append(method.invoke(entity));
+                } else {
+                    // example: name = xx, age = 20,
+                    sql.append(fieldName).append(" = '").append(method.invoke(entity)).append("', ");
+                }
+            }
+
+            sql.delete(sql.length() - 2, sql.length());
+            sql.append(condition);
+
+            result = "update " + tClass.getAnnotation(Entity.class).value() + " set " + sql.toString();
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+
+
+
+    private List<T> getEntitiesList(T entity) {
         // 从数据库获取到的数据
         List<T> result = null;
-        /*
-        sql: 拼接好后准备执行的sql语句 例如：select name, age from teacher where 1 = 1 and age = 28
-        needColumns: 需要获取哪些列名 例如：(name, age)
-        columnCondition: 查询的限制条件 例如：age = 28
-         */
-        StringBuilder sql, needColumns, columnCondition;
-        // fieldName: 属性名   methodName: 方法名
-        String fieldName, methodName;
-        // 通过反射获取到的方法 例如： getAge()
-        Method method;
-        // tClass实体类的所有属性
+        String methodName;
         Field[] fields;
         // field的包装类 如：age为Integer
         FieldType annotation;
         // 保存method执行后返回的数据
         Object fieldValue;
+        Class<T> tClass = (Class<T>) entity.getClass();
         T t;
 
         try {
+            fields = tClass.getDeclaredFields();
             result = new ArrayList<>();
-            needColumns = new StringBuilder();
-            columnCondition = new StringBuilder(" where 1 = 1");
-            fields= tClass.getDeclaredFields();
 
-            for (Field field : fields) {
-                fieldName = field.getName();
-                needColumns.append(fieldName).append(", ");
-                methodName = "get" + fieldName.toUpperCase().charAt(0) + field.getName().substring(1);
-                method = tClass.getMethod(methodName);
-                annotation = field.getAnnotation(FieldType.class);
-                fieldValue = method.invoke(entity);
-
-                if (fieldValue != null) {
-                    if ("String".equals(annotation.value())) {
-                        columnCondition.append(" and ").append(fieldName).append(" = '").append(fieldValue).append("'");
-                    } else {
-                        columnCondition.append(" and ").append(fieldName).append(" = ").append(fieldValue);
-                    }
-                }
-            }
-            needColumns.delete(needColumns.length() - 2, needColumns.length());
-
-            // select * from teacher where 1 = 1 and name = x and xx = xx
-            sql = new StringBuilder("select " + needColumns +" from "
-                    + tClass.getAnnotation(Table.class).value() + columnCondition);
-            System.out.println("sql: " + sql);
-
-            preparedStatement = connection.prepareStatement(sql.toString());
-            resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 t = tClass.newInstance();
 
@@ -119,162 +300,11 @@ public class EntityDaoImpl<T extends BaseEntity> implements com.cqut.icode.dao.E
 
                 result.add(t);
             }
-        } catch (SQLException | NoSuchMethodException | IllegalAccessException
-                | InvocationTargetException | InstantiationException e) {
+
+        } catch (SQLException | IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
             e.printStackTrace();
         }
 
-        close();
         return result;
-    }
-
-    @Override
-    public boolean saveEntity(T entity) {
-        boolean result = false;
-        Class<?> tClass = entity.getClass();
-
-        Field[] fields = tClass.getDeclaredFields();
-
-        try {
-            // example sql: insert ignore into teacher
-
-            StringBuilder sql = new StringBuilder("insert ignore into " +
-                    tClass.getAnnotation(Table.class).value() + "(");
-
-            StringBuilder columnValue = new StringBuilder("(");
-
-            // example sql: insert into teacher(tno, name) values (?, ?)
-            for (Field field : fields) {
-                if (!field.isAnnotationPresent(AutoIncrementId.class)) {
-                    String fieldName = field.getName();
-                    String methodName = "get" + fieldName.toUpperCase().charAt(0)
-                            + fieldName.substring(1);
-                    Method method = tClass.getMethod(methodName);
-                    FieldType annotation = field.getAnnotation(FieldType.class);
-
-                    sql.append(fieldName).append(", ");
-
-                    if ("String".equals(annotation.value())) {
-                        columnValue.append("'").append(method.invoke(entity)).append("', ");
-                    } else {
-                        columnValue.append(method.invoke(entity)).append(", ");
-                    }
-                }
-            }
-
-            sql.delete(sql.length() - 2, sql.length()).append(") values ");
-            columnValue.delete(columnValue.length() - 2, columnValue.length()).append(")");
-
-            sql.append(columnValue.toString());
-
-            System.out.println("sql: " + sql);
-
-            // 插入成功返回 true(1 > 0)，若主键重复则false(0 > 0)
-            preparedStatement = connection.prepareStatement(sql.toString());
-            result = preparedStatement.executeUpdate() > 0;
-
-        } catch (IllegalAccessException | InvocationTargetException
-                | NoSuchMethodException | SQLException e) {
-            e.printStackTrace();
-        }
-
-        close();
-        return result;
-    }
-
-
-    @Override
-    public boolean removeEntities(List<Long> ids, Class<T> tClass) {
-        StringBuilder condition = new StringBuilder("(");
-        for (Long id : ids) {
-            condition.append(id.toString()).append(", ");
-        }
-
-        // (1, 2, 3, 4, 5  ----> (1, 2, 3, 4, 5)
-        System.out.println(condition.delete(condition.length() - 2, condition.length()).append(")"));
-
-        boolean result = false;
-        Field[] fields = tClass.getDeclaredFields();
-        try {
-            StringBuilder sql = new StringBuilder("delete from "
-                    + tClass.getAnnotation(Table.class).value()
-                    + " where ");
-
-            for (Field field : fields) {
-                System.out.println("field name: " + field.getName());
-
-                if (field.isAnnotationPresent(AutoIncrementId.class)) {
-                    sql.append(field.getName());
-                    sql.append(" in ").append(condition).append(" ");
-                    break;
-                }
-            }
-
-            System.out.println("sql: " + sql);
-            preparedStatement = connection.prepareStatement(sql.toString());
-
-            result = preparedStatement.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        close();
-        return result;
-    }
-
-    @Override
-    public boolean updateEntity(T entity, Class<T> tClass) {
-        boolean result = false;
-        Field[] fields = tClass.getDeclaredFields();
-
-        try {
-            StringBuilder sql = new StringBuilder("update "
-                    + tClass.getAnnotation(Table.class).value() + " set ");
-            StringBuilder condition = new StringBuilder(" where ");
-            for (Field field : fields) {
-                String fieldName = field.getName();
-                String methodName = "get" + fieldName.toUpperCase().charAt(0)
-                        + fieldName.substring(1);
-
-                Method method = tClass.getMethod(methodName);
-                if (field.isAnnotationPresent(AutoIncrementId.class)) {
-                    // example: id = 3;
-                    condition.append(field.getName()).append(" = ").append(method.invoke(entity));
-                } else {
-                    // example: name = xx, age = 20,
-                    sql.append(fieldName).append(" = '").append(method.invoke(entity)).append("', ");
-                }
-            }
-            // name = xx, age = 20,
-            // ----->
-            // name = xx, age = 20
-            sql.delete(sql.length() - 2, sql.length());
-            sql.append(condition);
-            System.out.println("sql: " + sql);
-            preparedStatement = connection.prepareStatement(sql.toString());
-            result = preparedStatement.executeUpdate() > 0;
-        } catch (NoSuchMethodException | SQLException | InvocationTargetException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-        close();
-        return result;
-    }
-
-    private void close() {
-        if (resultSet != null) {
-            try {
-                resultSet.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-        if (preparedStatement != null) {
-            try {
-                preparedStatement.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
     }
 }

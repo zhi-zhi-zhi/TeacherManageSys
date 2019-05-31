@@ -2,14 +2,14 @@ package com.cqut.icode.entities;
 
 import com.cqut.icode.annotation.FieldType;
 import com.cqut.icode.annotation.AutoIncrementId;
-import com.cqut.icode.annotation.Table;
+import com.cqut.icode.annotation.Entity;
 import com.cqut.icode.entities.base.BaseEntity;
 
 /**
  * @author 谭强
  * @date 2019/5/12
  */
-@Table(value = "user")
+@Entity(value = "user")
 public class User extends BaseEntity {
     @AutoIncrementId
     @FieldType(value = "Long")

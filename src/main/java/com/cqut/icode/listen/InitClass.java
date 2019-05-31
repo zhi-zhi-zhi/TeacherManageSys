@@ -1,15 +1,9 @@
 package com.cqut.icode.listen;
 
-import com.cqut.icode.annotation.AutoWired;
-import com.cqut.icode.services.impl.TeacherServiceImpl;
-import com.cqut.icode.services.impl.UserServiceImpl;
-import com.cqut.icode.servlet.TeacherServlet;
-import com.cqut.icode.servlet.UserServlet;
 import net.sf.json.JSONObject;
 
 import javax.servlet.annotation.WebListener;
 import java.io.*;
-import java.lang.reflect.Field;
 import java.util.Objects;
 
 /**
@@ -36,10 +30,10 @@ public class InitClass {
 
             JSONObject object = JSONObject.fromObject(jsonStr.toString());
 
-            // 注入对象
-            Process process = new Process();
-            process.setObject(object);
-            process.init();
+            // 注入配置文件
+            Inject inject = new Inject();
+            inject.setObject(object);
+            inject.init();
         } catch (IOException e) {
             e.printStackTrace();
         }

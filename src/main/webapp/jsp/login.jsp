@@ -5,7 +5,7 @@
   Time: 20:06
   To change this template use File | Settings | File Templates.
 --%>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -16,12 +16,13 @@
     <script src="https://cdn.bootcss.com/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
 
     <link href="https://cdn.bootcss.com/font-awesome/5.8.1/css/all.min.css" rel="stylesheet">
+
     <script src="../js/login.js" async="async"></script>
     <link href="../css/login.css" rel="stylesheet" type="text/css">
 </head>
 <body style="background-color: #008ead">
 
-<h3 class="system-name" align="right" style="opacity: 1"><span class="system-name">学生成绩管理系统</span></h3>
+<h3 class="system-name" style="opacity: 1"><span class="system-name">学生成绩管理系统</span></h3>
 
 
 <div class="login-container">
@@ -35,13 +36,15 @@
 
         <div class="input-group ipt">
             <span class="input-group-addon"><i class="fa fa-user"></i></span>
-            <input class="form-control" type="text" id="username" name="clear" placeholder="请输入账号。" maxlength="10em">
+            <input class="form-control" type="text" id="username" placeholder="请输入账号。"
+                   maxlength="10em" autocomplete="off">
         </div>
         <p class="remind user">&nbsp;</p>
 
         <div class="input-group ipt">
             <span class="input-group-addon"><i class="fa fa-lock"></i></span>
-            <input class="form-control" type="password" id="password" placeholder="请输入密码。" maxlength="16em">
+            <input class="form-control" type="password" id="password" placeholder="请输入密码。"
+                   maxlength="16em" autocomplete="off">
         </div>
         <p class="remind pwd">&nbsp;</p>
 
@@ -54,7 +57,7 @@
             </label>
         </div>
 
-        <button class="login-btn btn btn-success" data-toggle="modal" data-target="">登陆</button>
+        <button id="loginBtn" class="login-btn btn btn-success" data-toggle="modal" data-target="">登陆</button>
     </div>
 
     <div class="register">
@@ -74,7 +77,7 @@
         </div>
         <p class="remind pwd-remind-cfm">&nbsp;</p>
 
-        <button class="register-btn btn btn-success" data-toggle="modal" data-target="">注册</button>
+        <button id="registerBtn" class="register-btn btn btn-success" data-toggle="modal" data-target="">注册</button>
     </div>
 
 
