@@ -1,21 +1,20 @@
 package com.cqut.icode.dao.impl;
 
-import com.cqut.icode.annotation.AutoIncrementId;
+import com.cqut.icode.annotation.GeneratedValue;
 import com.cqut.icode.annotation.Entity;
 import com.cqut.icode.dao.EntityDao;
 import com.cqut.icode.dao.dbconnection.DBConnection;
-import com.cqut.icode.annotation.FieldType;
+import com.cqut.icode.entities.Page;
 import com.cqut.icode.entities.base.BaseEntity;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author 谭强
@@ -25,6 +24,84 @@ public class EntityDaoImpl<T extends BaseEntity> implements EntityDao<T> {
     private Connection connection = DBConnection.getDBConnection();
     private PreparedStatement preparedStatement = null;
     private ResultSet resultSet = null;
+
+    @Override
+    public T getEntityById(Integer id, Class<T> entityClass) {
+        String sql = "select * from " + entityClass.getAnnotation(Entity.class).name()
+                + " where id = " + id;
+
+        T result = null;
+
+        try {
+            preparedStatement = connection.prepareStatement(sql);
+            resultSet = preparedStatement.executeQuery();
+            result = Objects.requireNonNull(getEntitiesList(entityClass)).get(0);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
+        return result;
+    }
+
+    @Override
+    public List<T> listEntitiesById(Integer id, Page page, Class<T> entityClass) {
+        StringBuilder sql = new StringBuilder("select * from "
+                + entityClass.getAnnotation(Entity.class).name()
+                + " where id like '%" + id + "%'"
+                + page.getLimit()
+                + page.getSort());
+
+        List<T> result = null;
+
+        try {
+            resultSet = connection.prepareStatement(sql.toString()).executeQuery();
+            result = getEntitiesList(entityClass);
+
+            resultSet = connection.prepareStatement("select count(*) total from "
+                    + entityClass.getAnnotation(Entity.class).name())
+                    .executeQuery();
+
+            if (resultSet.next()) {
+
+                page.setTotal(resultSet.getLong("total"));
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<T> listEntities(Page page, Class<T> entityClass) {
+        StringBuilder sql = new StringBuilder("select * from "
+                + entityClass.getAnnotation(Entity.class).name()
+                + page.getSort()
+                + page.getLimitAndOffset());
+
+        List<T> result = null;
+
+        try {
+            System.out.println(sql);
+            resultSet = connection.prepareStatement(sql.toString()).executeQuery();
+            result = getEntitiesList(entityClass);
+
+            resultSet = connection.prepareStatement("select count(*) total from "
+                    + entityClass.getAnnotation(Entity.class).name())
+                    .executeQuery();
+            if (resultSet.next() ) {
+                System.out.println(resultSet.getObject("total"));
+                Long integer = (Long) resultSet.getObject("total");
+                page.setTotal(integer);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
 
     @Override
     public T getEntity(T entity) {
@@ -46,7 +123,7 @@ public class EntityDaoImpl<T extends BaseEntity> implements EntityDao<T> {
 
             preparedStatement = connection.prepareStatement(sql);
             resultSet = preparedStatement.executeQuery();
-            result = getEntitiesList(entity);
+            result = getEntitiesList((Class<T>) entity.getClass());
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -81,8 +158,7 @@ public class EntityDaoImpl<T extends BaseEntity> implements EntityDao<T> {
         boolean result = false;
         System.out.println(sql);
         try {
-            preparedStatement = connection.prepareStatement(sql);
-            result = preparedStatement.executeUpdate() > 0;
+            result = connection.prepareStatement(sql).executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -115,29 +191,24 @@ public class EntityDaoImpl<T extends BaseEntity> implements EntityDao<T> {
         try {
             StringBuilder fieldsStr, condition;
             // fieldName: 属性名   methodName: 方法名
-            String fieldName, methodName;
-            // 通过反射获取到的方法 例如： getAge()
-            Method method;
-            // tClass实体类的所有属性
+            String fieldName;
             Field[] fields = tClass.getDeclaredFields();
             // field的包装类 如：age为Integer
-            FieldType annotation;
             // 保存method执行后返回的数据
             Object fieldValue;
 
             fieldsStr = new StringBuilder();
             condition = new StringBuilder(" where 1 = 1");
             for (Field field : fields) {
-                fieldName = field.getName();
-                methodName = "get" + fieldName.toUpperCase().charAt(0) + field.getName().substring(1);
-                method = tClass.getMethod(methodName);
-                fieldValue = method.invoke(entity);
+                field.setAccessible(true);
 
-                annotation = field.getAnnotation(FieldType.class);
+                fieldValue = field.get(entity);
+                fieldName = field.getName();
+
 
                 fieldsStr.append(fieldName).append(", ");
                 if (fieldValue != null) {
-                    if ("String".equals(annotation.value())) {
+                    if (field.getType() == String.class) {
                         condition.append(" and ").append(fieldName).append(" = '").append(fieldValue).append("'");
                     } else {
                         condition.append(" and ").append(fieldName).append(" = ").append(fieldValue);
@@ -147,8 +218,8 @@ public class EntityDaoImpl<T extends BaseEntity> implements EntityDao<T> {
             fieldsStr.delete(fieldsStr.length() - 2, fieldsStr.length());
 
             result = "select " + fieldsStr + " from "
-                    + tClass.getAnnotation(Entity.class).value() + condition;
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                    + tClass.getAnnotation(Entity.class).name() + condition;
+        } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
 
@@ -168,23 +239,20 @@ public class EntityDaoImpl<T extends BaseEntity> implements EntityDao<T> {
 
             // example sql: insert into teacher(tno, name) values (?, ?)
             for (Field field : fields) {
-                if (!field.isAnnotationPresent(AutoIncrementId.class)) {
-                    String fieldName = field.getName();
-                    String methodName = "get" + fieldName.toUpperCase().charAt(0)
-                            + fieldName.substring(1);
-                    Method method = tClass.getMethod(methodName);
+                field.setAccessible(true);
 
-                    fieldsStr.append(fieldName).append(", ");
-                    fieldsValueStr.append("'").append(method.invoke(entity)).append("', ");
+                if (!field.isAnnotationPresent(GeneratedValue.class)) {
+                    fieldsStr.append(field.getName()).append(", ");
+                    fieldsValueStr.append("'").append(field.get(entity)).append("', ");
                 }
             }
             fieldsStr.delete(fieldsStr.length() - 2, fieldsStr.length());
             fieldsValueStr.delete(fieldsValueStr.length() - 2, fieldsValueStr.length());
 
-            result = "insert ignore into " + tClass.getAnnotation(Entity.class).value()
+            result = "insert ignore into " + tClass.getAnnotation(Entity.class).name()
                     + "(" + fieldsStr + ") values (" + fieldsValueStr + ")";
 
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+        } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
 
@@ -202,11 +270,11 @@ public class EntityDaoImpl<T extends BaseEntity> implements EntityDao<T> {
 
         Field[] fields = tClass.getDeclaredFields();
         StringBuilder sql = new StringBuilder("delete from "
-                + tClass.getAnnotation(Entity.class).value()
+                + tClass.getAnnotation(Entity.class).name()
                 + " where ");
 
         for (Field field : fields) {
-            if (field.isAnnotationPresent(AutoIncrementId.class)) {
+            if (field.isAnnotationPresent(GeneratedValue.class)) {
                 sql.append(field.getName());
                 sql.append(" in ").append(condition).append(" ");
                 break;
@@ -225,44 +293,37 @@ public class EntityDaoImpl<T extends BaseEntity> implements EntityDao<T> {
             StringBuilder sql = new StringBuilder();
             StringBuilder condition = new StringBuilder(" where ");
             for (Field field : fields) {
+                field.setAccessible(true);
                 String fieldName = field.getName();
-                String methodName = "get" + fieldName.toUpperCase().charAt(0)
-                        + fieldName.substring(1);
 
-                Method method = tClass.getMethod(methodName);
-                if (field.isAnnotationPresent(AutoIncrementId.class)) {
+                if (field.isAnnotationPresent(GeneratedValue.class)) {
                     // example: id = 3;
-                    condition.append(field.getName()).append(" = ").append(method.invoke(entity));
+                    condition.append(field.getName()).append(" = ").append(field.get(entity));
                 } else {
                     // example: name = xx, age = 20,
-                    sql.append(fieldName).append(" = '").append(method.invoke(entity)).append("', ");
+                    sql.append(fieldName).append(" = '").append(field.get(entity)).append("', ");
                 }
             }
 
             sql.delete(sql.length() - 2, sql.length());
             sql.append(condition);
 
-            result = "update " + tClass.getAnnotation(Entity.class).value() + " set " + sql.toString();
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            result = "update " + tClass.getAnnotation(Entity.class).name() + " set " + sql.toString();
+        } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
 
         return result;
     }
 
+    private List<T> getEntitiesList(Class<T> tClass) {
+        if (resultSet == null) {
+            return null;
+        }
 
-
-
-    private List<T> getEntitiesList(T entity) {
         // 从数据库获取到的数据
         List<T> result = null;
-        String methodName;
         Field[] fields;
-        // field的包装类 如：age为Integer
-        FieldType annotation;
-        // 保存method执行后返回的数据
-        Object fieldValue;
-        Class<T> tClass = (Class<T>) entity.getClass();
         T t;
 
         try {
@@ -273,35 +334,14 @@ public class EntityDaoImpl<T extends BaseEntity> implements EntityDao<T> {
                 t = tClass.newInstance();
 
                 for (Field field : fields) {
-                    annotation = field.getAnnotation(FieldType.class);
-                    methodName = "set" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1);
-
-                    fieldValue = resultSet.getObject(field.getName());
-                    switch (annotation.value()) {
-                        case "String": {
-                            tClass.getMethod(methodName, String.class).invoke(t, (String) fieldValue);
-                            break;
-                        }
-                        case "Integer": {
-                            tClass.getMethod(methodName, Integer.class).invoke(t, (Integer) fieldValue);
-                            break;
-                        }
-                        case "Float": {
-                            tClass.getMethod(methodName, Float.class).invoke(t, (Float) fieldValue);
-                            break;
-                        }
-                        case "Long": {
-                            tClass.getMethod(methodName, Long.class).invoke(t, (Long) fieldValue);
-                            break;
-                        }
-                        default:
-                    }
+                    field.setAccessible(true);
+                    field.set(t, resultSet.getObject(field.getName()));
                 }
 
                 result.add(t);
             }
 
-        } catch (SQLException | IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
+        } catch (SQLException | IllegalAccessException | InstantiationException e) {
             e.printStackTrace();
         }
 

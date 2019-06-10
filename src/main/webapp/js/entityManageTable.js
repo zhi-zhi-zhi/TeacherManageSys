@@ -1,32 +1,13 @@
 // 初始化table内容
-function initTable() {
+function initTable(dynamicColumns) {
     let table = $('#table');
     table.bootstrapTable({
         // url: "/json/falseData.json",
         // method: "get",
-        url: teacherUrl,
+        url: "/entity",
         method: "get",
         dataType: "json",
-        ajaxOptions: {
-            success: function (res) {
-                console.log("ajax success");
-                console.log(res);
-            },
-            error: function (res) {
-                console.log("ajax error");
-                console.log(res)
-            },
-            complete: function (XMLHttpRequest, textStatus) {
-                console.log("ajax complete");
-                if (XMLHttpRequest.getResponseHeader("REDIRECT") !== null) {
-                    window.location.href = XMLHttpRequest.getResponseHeader("urlLocation");
-                }
-            }
-        },
-        onLoadSuccess: function (data) {
-            console.log("```````json\n");
-            console.log(data)
-        },
+        ajaxOptions: ajaxOptions,
         cache: false,
         search: true,
         sortable: true,
@@ -38,7 +19,9 @@ function initTable() {
         paginationLoop: true,
         pageNumber: 1,
         pageSize: 5,
-        pageList: [5, 10, 15],
+        pageList: [1, 2, 5],
+        queryParamsType: "limit",
+        queryParams: queryParams,
         idField: "id",
         clickToSelect: true,
         showRefresh: true,
@@ -47,30 +30,60 @@ function initTable() {
         detailFormatter: detailFormatter,
         responseHandler: responseHandler,
 
-        // sidePagination: "server", // 服务器端分页，暂时不搞
-        // dataField: "res",
+        sidePagination: "server", // 服务器端分页，暂时不搞
 
-        columns: teacherColumns
+        columns: dynamicColumns
     });
     console.log("~~~~~~~~~~~~~~")
 }
 
+const ajaxOptions = {
+    success: function (res) {
+        console.log("ajax success");
+        console.log(res);
+    },
+    error: function (res) {
+        console.log("ajax error");
+        console.log(res)
+    },
+    complete: function (XMLHttpRequest, textStatus) {
+        console.log("ajax complete");
+        if (XMLHttpRequest.getResponseHeader("REDIRECT") !== null) {
+            window.location.href = XMLHttpRequest.getResponseHeader("urlLocation");
+        }
+    }
+}
+
+function queryParams(params) {
+    console.log(params);
+    return {
+        // pageSize
+        limit: params.limit,
+        // 初始偏移量
+        offset: params.offset,
+        sortField: params.sort,
+        sortOrder: params.order,
+        entity: entity
+    }
+}
+
 // 对返回的数据加上index
 function responseHandler(res) {
-    console.log("responseHandle");
+    console.log("");
 
     console.log(res);
-    res.forEach(function (row, i) {
+    res.rows.forEach(function (row, i) {
         row.index = i + 1;
     });
+
 
     return res;
 }
 
 // 详细信息格式化
-function detailFormatter(index, row) {
+function detailFormatter(index, res) {
     const html = [];
-    $.each(row, function (key, value) {
+    $.each(res, function (key, value) {
         html.push('<p><b>' + key + ':</b> ' + value + '</p>')
     });
     return html.join('')

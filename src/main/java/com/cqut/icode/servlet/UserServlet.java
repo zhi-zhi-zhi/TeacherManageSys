@@ -2,7 +2,9 @@ package com.cqut.icode.servlet;
 
 //import com.cqut.icode.dao.UserDao;
 import com.cqut.icode.annotation.AutoWired;
+import com.cqut.icode.entities.Teacher;
 import com.cqut.icode.entities.User;
+import com.cqut.icode.services.EntityService;
 import com.cqut.icode.util.RandomLong;
 import com.cqut.icode.services.UserService;
 
@@ -24,18 +26,24 @@ public class UserServlet extends HttpServlet {
     @AutoWired
     private static UserService userService;
 
+    @AutoWired
+    private static EntityService<Teacher> service;
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         System.out.println("\n用户登录");
         String username = req.getParameter("username");
         String password = req.getParameter("password");
 
+
         boolean result = userService.login(new User(Long.parseLong(username), password));
 
         if (result) {
             resp.getWriter().write("success");
+
             HttpSession session = req.getSession();
             session.setAttribute("username", username);
+
             System.out.println("" + session.getId());
             System.out.println(session.getAttribute("username"));
         } else {

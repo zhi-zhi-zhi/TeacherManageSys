@@ -28,6 +28,7 @@ public class LoginFilter implements Filter {
         urls.add("css");
         urls.add("json");
         urls.add("html");
+        urls.add("entity");
     }
 
     @Override
@@ -47,6 +48,7 @@ public class LoginFilter implements Filter {
         String path = req.getRequestURL().toString();
         System.out.println("url pattern: "+urlPattern);
         System.out.println("path: " + path);
+
         for (String url : urls) {
             if (url.equals(urlPattern) || path.contains(url)) {
                 // 放行

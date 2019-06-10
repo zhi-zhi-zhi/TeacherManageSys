@@ -1,48 +1,29 @@
 package com.cqut.icode.entities;
 
-import com.cqut.icode.annotation.AutoIncrementId;
+import com.cqut.icode.annotation.GeneratedValue;
 import com.cqut.icode.annotation.Entity;
 import com.cqut.icode.entities.base.BaseEntity;
-import com.cqut.icode.annotation.FieldType;
 
 /**
  * @author 谭强
  * @date 2019/5/11
  */
-@Entity(value = "teacher")
+@Entity(name = "teacher")
 public class Teacher extends BaseEntity implements Cloneable{
-    @AutoIncrementId
-    @FieldType(value = "Long")
+    @GeneratedValue
     private Long id;
-    @FieldType(value = "Long")
     private Long tno;
-    @FieldType(value = "String")
     private String name;
-    @FieldType(value = "String")
     private String gender;
-    @FieldType(value = "Integer")
     private Integer age;
-    @FieldType(value = "String")
     private String academy;
-    @FieldType(value = "String")
     private String dept;
-    @FieldType(value = "Float")
     private Float salary;
 
     public Teacher() {
     }
 
     public Teacher(String name, String gender, Integer age, String academy, String dept, Float salary) {
-        this.name = name;
-        this.gender = gender;
-        this.age = age;
-        this.academy = academy;
-        this.dept = dept;
-        this.salary = salary;
-    }
-
-    public Teacher(Long id, String name, String gender, Integer age, String academy, String dept, Float salary) {
-        this.id = id;
         this.name = name;
         this.gender = gender;
         this.age = age;
@@ -60,6 +41,30 @@ public class Teacher extends BaseEntity implements Cloneable{
         this.academy = academy;
         this.dept = dept;
         this.salary = salary;
+    }
+
+    @Override
+    public Object clone()  {
+        try {
+            return super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "id=" + id +
+                ", tno=" + tno +
+                ", name='" + name + '\'' +
+                ", gender='" + gender + '\'' +
+                ", age=" + age +
+                ", academy='" + academy + '\'' +
+                ", dept='" + dept + '\'' +
+                ", salary=" + salary +
+                '}';
     }
 
     public Long getId() {
@@ -124,29 +129,5 @@ public class Teacher extends BaseEntity implements Cloneable{
 
     public void setSalary(Float salary) {
         this.salary = salary;
-    }
-
-    @Override
-    public Object clone()  {
-        try {
-            return super.clone();
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    @Override
-    public String toString() {
-        return "Teacher{" +
-                "id=" + id +
-                ", tno=" + tno +
-                ", name='" + name + '\'' +
-                ", gender='" + gender + '\'' +
-                ", age=" + age +
-                ", academy='" + academy + '\'' +
-                ", dept='" + dept + '\'' +
-                ", salary=" + salary +
-                '}';
     }
 }

@@ -1,5 +1,6 @@
 package com.cqut.icode.dao;
 
+import com.cqut.icode.entities.Page;
 import com.cqut.icode.entities.base.BaseEntity;
 
 import java.util.List;
@@ -18,6 +19,8 @@ public interface EntityDao<T extends BaseEntity> {
      */
     T getEntity(T entity);
 
+    T getEntityById(Integer id, Class<T> entityClass);
+
     /**
      * 从数据库中获取该实体的所有元祖
      *
@@ -25,6 +28,13 @@ public interface EntityDao<T extends BaseEntity> {
      * @return 实体对象集合
      */
     List<T> listEntities(T entity);
+
+    List<T> listEntitiesById(Integer id, Page page, Class<T> entityClass);
+
+    List<T> listEntities(Page page, Class<T> entityClass);
+
+
+
 
     /**
      * 在数据库中插入该对象

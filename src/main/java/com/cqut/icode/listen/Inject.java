@@ -1,8 +1,12 @@
 package com.cqut.icode.listen;
 
 import com.cqut.icode.annotation.AutoWired;
+import com.cqut.icode.annotation.Entity;
+import com.cqut.icode.services.impl.EntityServiceImpl;
 import com.cqut.icode.services.impl.TeacherServiceImpl;
 import com.cqut.icode.services.impl.UserServiceImpl;
+import com.cqut.icode.servlet.EntityServlet;
+import com.cqut.icode.servlet.GirlServlet;
 import com.cqut.icode.servlet.TeacherServlet;
 import com.cqut.icode.servlet.UserServlet;
 import net.sf.json.JSONObject;
@@ -22,9 +26,14 @@ class Inject {
 
     void init() {
         inject(TeacherServlet.class);
+        inject(GirlServlet.class);
         inject(UserServlet.class);
+
         inject(TeacherServiceImpl.class);
         inject(UserServiceImpl.class);
+
+        inject(EntityServlet.class);
+        inject(EntityServiceImpl.class);
     }
 
     private void inject(Class tClass) {

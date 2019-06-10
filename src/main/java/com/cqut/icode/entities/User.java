@@ -1,7 +1,6 @@
 package com.cqut.icode.entities;
 
-import com.cqut.icode.annotation.FieldType;
-import com.cqut.icode.annotation.AutoIncrementId;
+import com.cqut.icode.annotation.GeneratedValue;
 import com.cqut.icode.annotation.Entity;
 import com.cqut.icode.entities.base.BaseEntity;
 
@@ -9,14 +8,11 @@ import com.cqut.icode.entities.base.BaseEntity;
  * @author 谭强
  * @date 2019/5/12
  */
-@Entity(value = "user")
+@Entity(name = "user")
 public class User extends BaseEntity {
-    @AutoIncrementId
-    @FieldType(value = "Long")
+    @GeneratedValue
     private Long id;
-    @FieldType(value = "Long")
     private Long username;
-    @FieldType(value = "String")
     private String password;
 
     public User() {
@@ -27,10 +23,18 @@ public class User extends BaseEntity {
         this.password = password;
     }
 
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username=" + username +
+                ", password='" + password + '\'' +
+                '}';
+    }
+
     public Long getId() {
         return id;
     }
-
 
     public void setId(Long id) {
         this.id = id;
@@ -50,14 +54,5 @@ public class User extends BaseEntity {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", username=" + username +
-                ", password='" + password + '\'' +
-                '}';
     }
 }

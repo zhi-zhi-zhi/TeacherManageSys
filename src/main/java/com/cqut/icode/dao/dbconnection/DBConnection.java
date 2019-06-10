@@ -20,7 +20,7 @@ public class DBConnection {
         try {
             System.out.println("开始加载驱动。。。。");
             Class.forName("com.mysql.jdbc.Driver");
-            System.out.println("驱动加载成功。。。。\n开始链接数据库");
+            System.out.println("驱动加载成功。。。。\n开始连接数据库");
             String url = "jdbc:mysql://localhost:3306/teacher?useUnicode=true&characterEncoding=UTF-8";
             String user = "root";
             String password = "990106";
